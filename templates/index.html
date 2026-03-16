@@ -1,115 +1,1105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Analysis</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>VideoFinder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #121416;
+            --bg-soft: #191d20;
+            --panel: rgba(22, 26, 30, 0.9);
+            --panel-strong: rgba(31, 37, 42, 0.96);
+            --line: rgba(255, 255, 255, 0.09);
+            --text: #f3efe6;
+            --muted: #a4aca8;
+            --accent: #ff7a1a;
+            --accent-soft: rgba(255, 122, 26, 0.14);
+            --signal: #d7ff64;
+            --danger: #ff6f61;
+            --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+            --radius-xl: 28px;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --radius-sm: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "IBM Plex Sans", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(255, 122, 26, 0.16), transparent 28%),
+                radial-gradient(circle at top right, rgba(215, 255, 100, 0.08), transparent 20%),
+                linear-gradient(135deg, #0d0f11 0%, #171a1d 45%, #101214 100%);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 36px 36px;
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent 75%);
+            pointer-events: none;
+        }
+
+        .page-shell {
+            position: relative;
+            width: min(1380px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 28px 0 36px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+            gap: 22px;
+            align-items: stretch;
+        }
+
+        .hero-card,
+        .panel {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+            background: var(--panel);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .hero-card {
+            padding: 34px;
+            min-height: 330px;
+        }
+
+        .hero-card::after,
+        .panel::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(140deg, rgba(255, 255, 255, 0.06), transparent 40%);
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--signal);
+            font-size: 0.82rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--signal);
+            box-shadow: 0 0 18px rgba(215, 255, 100, 0.75);
+        }
+
+        h1,
+        h2,
+        h3,
+        .display {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+        }
+
+        .display {
+            margin-top: 18px;
+            font-size: clamp(2.6rem, 5vw, 4.8rem);
+            line-height: 0.95;
+            max-width: 10ch;
+        }
+
+        .hero-copy {
+            margin-top: 18px;
+            max-width: 58ch;
+            color: var(--muted);
+            font-size: 1.04rem;
+            line-height: 1.75;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 30px;
+        }
+
+        .hero-stat {
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .hero-stat span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .hero-stat strong {
+            display: block;
+            margin-top: 10px;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 1.5rem;
+        }
+
+        .status-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 26px;
+            background:
+                linear-gradient(160deg, rgba(255, 122, 26, 0.16), transparent 44%),
+                var(--panel-strong);
+        }
+
+        .status-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.86rem;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+        }
+
+        .status-pill::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 16px currentColor;
+        }
+
+        .status-pill.idle {
+            color: var(--muted);
+        }
+
+        .status-pill.running {
+            color: var(--signal);
+        }
+
+        .status-pill.match {
+            color: var(--accent);
+        }
+
+        .status-pill.error {
+            color: var(--danger);
+        }
+
+        .status-title {
+            margin-top: 18px;
+            font-size: 1.9rem;
+            line-height: 1.05;
+        }
+
+        .status-meta {
+            margin-top: 10px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .summary-box {
+            padding: 16px;
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--line);
+        }
+
+        .summary-box span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .summary-box strong {
+            display: block;
+            margin-top: 9px;
+            font-size: 1.15rem;
+        }
+
+        .status-trace {
+            padding: 16px 18px;
+            border-radius: var(--radius-lg);
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--muted);
+            min-height: 82px;
+            white-space: pre-line;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1.12fr) minmax(340px, 0.88fr);
+            gap: 22px;
+            margin-top: 22px;
+        }
+
+        .panel {
+            padding: 26px;
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .panel-title p {
+            margin: 6px 0 0;
+            color: var(--muted);
+        }
+
         .upload-area {
-            border: 2px dashed #ccc;
-            border-radius: 5px;
-            padding: 20px;
-            text-align: center;
-            background: #f8f9fa;
+            position: relative;
+            padding: 34px 28px;
+            border-radius: 24px;
+            border: 1px dashed rgba(255, 255, 255, 0.22);
+            background:
+                linear-gradient(135deg, rgba(255, 122, 26, 0.08), transparent 34%),
+                rgba(255, 255, 255, 0.025);
             cursor: pointer;
+            transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        }
+
+        .upload-area:hover,
+        .upload-area.is-dragover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 122, 26, 0.6);
+            background:
+                linear-gradient(135deg, rgba(255, 122, 26, 0.14), transparent 40%),
+                rgba(255, 255, 255, 0.045);
+        }
+
+        .upload-icon {
+            width: 56px;
+            height: 56px;
+            display: grid;
+            place-items: center;
+            border-radius: 18px;
+            background: var(--accent-soft);
+            font-size: 1.6rem;
+            box-shadow: inset 0 0 0 1px rgba(255, 122, 26, 0.22);
+        }
+
+        .upload-layout {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+        }
+
+        .upload-layout h3 {
+            font-size: 1.32rem;
+        }
+
+        .upload-layout p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            line-height: 1.65;
+        }
+
+        .field-block {
+            margin-top: 18px;
+        }
+
+        .field-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 10px;
+            color: var(--text);
+            font-size: 0.94rem;
         }
-        .upload-area:hover {
-            border-color: #0d6efd;
-            background: #f1f3f5;
+
+        .field-help {
+            color: var(--muted);
+            font-size: 0.82rem;
         }
-        .results-container {
-            max-height: 600px;
-            overflow-y: auto;
+
+        .text-input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            font: inherit;
+            transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
         }
-        .frame-image {
-            max-width: 100%;
-            height: auto;
-            border-radius: 5px;
-            margin-bottom: 10px;
+
+        .text-input:focus {
+            outline: none;
+            border-color: rgba(255, 122, 26, 0.6);
+            box-shadow: 0 0 0 4px rgba(255, 122, 26, 0.16);
+            transform: translateY(-1px);
         }
-        .analyzing {
-            animation: pulse 2s infinite;
+
+        .text-input::placeholder {
+            color: #7e8783;
         }
+
+        .action-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .primary-btn {
+            flex: 1;
+            border: none;
+            border-radius: 18px;
+            padding: 16px 22px;
+            background: linear-gradient(135deg, #ff9347, var(--accent));
+            color: #141210;
+            font: 600 1rem "IBM Plex Sans", sans-serif;
+            cursor: pointer;
+            transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+            box-shadow: 0 18px 34px rgba(255, 122, 26, 0.28);
+        }
+
+        .primary-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 22px 42px rgba(255, 122, 26, 0.36);
+        }
+
+        .primary-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.72;
+        }
+
+        .support-note,
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--muted);
+            border: 1px solid var(--line);
+            font-size: 0.88rem;
+        }
+
+        .chip strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .alert-error {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            background: rgba(255, 111, 97, 0.12);
+            color: #ffb4ac;
+            border: 1px solid rgba(255, 111, 97, 0.28);
+            display: none;
+        }
+
+        .alert-error.is-visible {
+            display: block;
+        }
+
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+            min-height: 720px;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .results-count {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .preview-stage {
+            position: relative;
+            aspect-ratio: 16 / 10;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.28)),
+                #101214;
+        }
+
+        .preview-stage img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .preview-empty {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            padding: 28px;
+            color: var(--muted);
+            background:
+                radial-gradient(circle at top right, rgba(255, 122, 26, 0.14), transparent 30%),
+                rgba(255, 255, 255, 0.02);
+        }
+
+        .preview-stage.is-clickable {
+            cursor: zoom-in;
+        }
+
+        .preview-overlay {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 18px;
+            background: linear-gradient(180deg, transparent, rgba(8, 10, 12, 0.92));
+            display: grid;
+            gap: 10px;
+        }
+
+        .preview-topline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .preview-second {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 1.1rem;
+        }
+
+        .preview-description {
+            margin: 0;
+            color: #e8e2d6;
+            line-height: 1.68;
+        }
+
+        .preview-metrics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .preview-metric {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            font-size: 0.82rem;
+        }
+
+        .event-log {
+            margin-top: 16px;
+            display: grid;
+            gap: 12px;
+            max-height: 380px;
+            overflow: auto;
+            padding-right: 6px;
+        }
+
+        .event-log::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .event-log::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+        }
+
+        .event-item {
+            width: 100%;
+            text-align: left;
+            padding: 16px 18px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.03);
+            color: inherit;
+            cursor: pointer;
+            transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+        }
+
+        .event-item:hover {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .event-item.active {
+            border-color: rgba(255, 122, 26, 0.5);
+            background: rgba(255, 122, 26, 0.12);
+        }
+
+        .event-item-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .event-item-time {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 1.04rem;
+        }
+
+        .event-badge {
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.83rem;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--muted);
+        }
+
+        .event-badge.match {
+            color: #18130f;
+            background: linear-gradient(135deg, #ffb078, #ff7a1a);
+        }
+
+        .event-description {
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.65;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .event-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .event-meta span {
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        .event-log-empty {
+            display: grid;
+            place-items: center;
+            min-height: 180px;
+            border: 1px dashed var(--line);
+            border-radius: 20px;
+            text-align: center;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .preview-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(6, 7, 8, 0.82);
+            backdrop-filter: blur(12px);
+            z-index: 50;
+        }
+
+        .preview-modal.is-open {
+            display: flex;
+        }
+
+        .preview-modal-dialog {
+            position: relative;
+            width: min(1200px, 100%);
+            max-height: calc(100vh - 48px);
+            padding: 18px;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(18, 20, 22, 0.96);
+            box-shadow: 0 28px 120px rgba(0, 0, 0, 0.55);
+        }
+
+        .preview-modal-image {
+            width: 100%;
+            max-height: calc(100vh - 120px);
+            object-fit: contain;
+            border-radius: 20px;
+            display: block;
+            background: #090a0b;
+        }
+
+        .preview-modal-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .preview-modal-caption {
+            margin-top: 12px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .analysis-pulse {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .analysis-pulse::before {
+            content: "";
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 1.8s infinite;
+        }
+
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+            0% { opacity: 0.35; transform: scale(0.7); }
+            50% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0.35; transform: scale(0.7); }
+        }
+
+        @media (max-width: 1080px) {
+            .hero,
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .status-panel {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .page-shell {
+                width: min(100% - 20px, 100%);
+                padding-top: 20px;
+                padding-bottom: 24px;
+            }
+
+            .hero-card,
+            .panel,
+            .status-panel {
+                padding: 20px;
+                border-radius: 22px;
+            }
+
+            .display {
+                max-width: none;
+                font-size: 2.5rem;
+            }
+
+            .hero-grid,
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .upload-layout {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .results-panel {
+                min-height: auto;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title mb-0">Video Object Detection</h3>
+    <main class="page-shell">
+        <section class="hero">
+            <article class="hero-card">
+                <div class="eyebrow">Local Vision Stream</div>
+                <h1 class="display">VideoFinder 影像追蹤台</h1>
+                <p class="hero-copy">
+                    把影片中的關鍵人物、服裝顏色或視覺目標拉出來。這不是一般的上傳頁，而是一個會逐秒檢視影格、即時回報判斷結果的本機分析控制台。
+                </p>
+                <div class="hero-grid">
+                    <div class="hero-stat">
+                        <span>分析模式</span>
+                        <strong>逐秒抽幀</strong>
                     </div>
-                    <div class="card-body">
-                        <form id="uploadForm">
-                            <div class="mb-3">
-                                <label class="form-label">Upload Video</label>
-                                <div class="upload-area" id="uploadArea">
-                                    <div id="uploadText">
-                                        <p class="mb-0">Click or drag video to upload</p>
-                                    </div>
-                                    <input type="file" id="videoInput" accept="video/*" class="d-none">
-                                </div>
-                                <small class="text-muted" id="fileInfo"></small>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="objectInput" class="form-label">Object to Find</label>
-                                <input type="text" class="form-control" id="objectInput"
-                                       placeholder="e.g., 'a person wearing red shirt'">
-                            </div>
-
-                            <div class="alert alert-danger d-none" id="errorAlert"></div>
-
-                            <button type="submit" class="btn btn-primary w-100" id="analyzeBtn">
-                                Start Analysis
-                            </button>
-                        </form>
-
-                        <div id="statusText" class="text-center mt-3 d-none">
-                            <p class="analyzing">Analyzing video...</p>
-                        </div>
-
-                        <div class="results-container mt-4" id="resultsContainer"></div>
+                    <div class="hero-stat">
+                        <span>模型來源</span>
+                        <strong>Ollama Vision</strong>
+                    </div>
+                    <div class="hero-stat">
+                        <span>輸出節奏</span>
+                        <strong>即時串流</strong>
                     </div>
                 </div>
-            </div>
+            </article>
+
+            <aside class="status-panel">
+                <div class="status-header">
+                    <div>
+                        <div class="status-pill idle" id="statusPill">待命中</div>
+                        <h2 class="status-title" id="statusHeadline">準備開始一次新的影像搜索</h2>
+                        <p class="status-meta" id="statusMeta">上傳影片、輸入描述後，系統會逐秒擷取畫面並比對目標。</p>
+                    </div>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-box">
+                        <span>目標描述</span>
+                        <strong id="targetPreview">尚未設定</strong>
+                    </div>
+                    <div class="summary-box">
+                        <span>選取檔案</span>
+                        <strong id="filePreview">尚未選擇</strong>
+                    </div>
+                    <div class="summary-box">
+                        <span>已分析影格</span>
+                        <strong id="framesAnalyzed">0</strong>
+                    </div>
+                    <div class="summary-box">
+                        <span>命中時間</span>
+                        <strong id="matchSecond">尚未命中</strong>
+                    </div>
+                </div>
+
+                <div class="status-trace" id="statusTrace">等待新任務。</div>
+            </aside>
+        </section>
+
+        <section class="workspace">
+            <article class="panel">
+                <div class="panel-title">
+                    <div>
+                        <h2>任務輸入</h2>
+                        <p>針對顏色、服裝、角色或動作建立這次搜索條件。</p>
+                    </div>
+                </div>
+
+                <form id="uploadForm">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-layout">
+                            <div class="upload-icon">↑</div>
+                            <div>
+                                <h3>拖曳影片到這裡，或點擊選擇檔案</h3>
+                                <p id="uploadText">支援常見影片格式。系統會在本機分析，不會跳轉到其他頁面。</p>
+                            </div>
+                        </div>
+                        <input type="file" id="videoInput" accept="video/*" class="d-none" hidden>
+                    </div>
+
+                    <div class="chips" id="fileInfo"></div>
+
+                    <div class="field-block">
+                        <label for="objectInput" class="field-label">
+                            <span>目標描述</span>
+                            <span class="field-help">越接近畫面特徵越好，例如「穿橘色外套的人」</span>
+                        </label>
+                        <input
+                            type="text"
+                            class="text-input"
+                            id="objectInput"
+                            placeholder="例如：穿橘色衣服的人、紫色衣服的小朋友、拿雨傘的人"
+                        >
+                    </div>
+
+                    <div class="action-row">
+                        <button type="submit" class="primary-btn" id="analyzeBtn">開始分析這支影片</button>
+                    </div>
+
+                    <div class="support-note">
+                        <div class="chip"><strong>建議描述：</strong>優先寫顏色、服裝、位置特徵</div>
+                        <div class="chip"><strong>停止條件：</strong>第一個命中就停止</div>
+                    </div>
+
+                    <div class="alert-error" id="errorAlert"></div>
+                </form>
+            </article>
+
+            <article class="panel results-panel">
+                <div class="results-header">
+                    <div>
+                        <h2>即時結果</h2>
+                        <p class="results-count" id="resultsCount">目前尚未收到分析影格</p>
+                    </div>
+                </div>
+
+                <div class="preview-stage" id="previewStage">
+                    <div class="preview-empty" id="previewEmpty">
+                        <div>
+                            <h3>等待第一張分析影格</h3>
+                            <p>右側將固定顯示一張主預覽圖，下面的事件列表可切換查看各秒數結果。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="event-log" id="eventLog">
+                    <div class="event-log-empty" id="eventLogEmpty">
+                        <div>
+                            <h3>尚未建立事件列表</h3>
+                            <p>分析開始後，這裡會依序記錄每次判讀結果，不再無限堆疊圖片卡。</p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <div class="preview-modal" id="previewModal" aria-hidden="true">
+        <div class="preview-modal-dialog">
+            <button type="button" class="preview-modal-close" id="previewModalClose" aria-label="關閉放大檢視">×</button>
+            <img id="previewModalImage" class="preview-modal-image" alt="放大影格預覽">
+            <div class="preview-modal-caption" id="previewModalCaption">放大檢視</div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const uploadArea = document.getElementById('uploadArea');
+            const uploadText = document.getElementById('uploadText');
             const videoInput = document.getElementById('videoInput');
             const uploadForm = document.getElementById('uploadForm');
             const analyzeBtn = document.getElementById('analyzeBtn');
-            const statusText = document.getElementById('statusText');
             const errorAlert = document.getElementById('errorAlert');
-            const resultsContainer = document.getElementById('resultsContainer');
+            const previewStage = document.getElementById('previewStage');
+            const previewEmpty = document.getElementById('previewEmpty');
+            const previewModal = document.getElementById('previewModal');
+            const previewModalImage = document.getElementById('previewModalImage');
+            const previewModalCaption = document.getElementById('previewModalCaption');
+            const previewModalClose = document.getElementById('previewModalClose');
+            const eventLog = document.getElementById('eventLog');
+            const eventLogEmpty = document.getElementById('eventLogEmpty');
+            const resultsCount = document.getElementById('resultsCount');
             const fileInfo = document.getElementById('fileInfo');
+            const objectInput = document.getElementById('objectInput');
+            const statusPill = document.getElementById('statusPill');
+            const statusHeadline = document.getElementById('statusHeadline');
+            const statusMeta = document.getElementById('statusMeta');
+            const statusTrace = document.getElementById('statusTrace');
+            const targetPreview = document.getElementById('targetPreview');
+            const filePreview = document.getElementById('filePreview');
+            const framesAnalyzed = document.getElementById('framesAnalyzed');
+            const matchSecond = document.getElementById('matchSecond');
 
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.style.borderColor = '#0d6efd';
+            let renderedFrames = 0;
+            let frameEvents = [];
+            let activeFrameIndex = null;
+            let activePreviewFrame = null;
+
+            function setStatus(variant, headline, meta, trace) {
+                statusPill.className = `status-pill ${variant}`;
+                statusHeadline.textContent = headline;
+                statusMeta.textContent = meta;
+                statusTrace.textContent = trace;
+            }
+
+            function showError(message) {
+                errorAlert.textContent = message;
+                errorAlert.classList.add('is-visible');
+                setStatus('error', '任務中斷', '分析流程出現錯誤，請檢查輸入或後端狀態。', message);
+            }
+
+            function clearError() {
+                errorAlert.textContent = '';
+                errorAlert.classList.remove('is-visible');
+            }
+
+            function updateFileInfo(file) {
+                fileInfo.innerHTML = '';
+                filePreview.textContent = file.name;
+                uploadText.textContent = '已選擇檔案，準備送進逐幀分析流程。';
+
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.innerHTML = `<strong>影片：</strong>${file.name}`;
+                fileInfo.appendChild(chip);
+            }
+
+            function updateTargetPreview() {
+                const value = objectInput.value.trim();
+                targetPreview.textContent = value || '尚未設定';
+            }
+
+            function resetRunState() {
+                renderedFrames = 0;
+                frameEvents = [];
+                activeFrameIndex = null;
+                activePreviewFrame = null;
+                resultsCount.textContent = '目前尚未收到分析影格';
+                framesAnalyzed.textContent = '0';
+                matchSecond.textContent = '尚未命中';
+                previewStage.innerHTML = '';
+                previewStage.classList.remove('is-clickable');
+                previewStage.appendChild(previewEmpty);
+                previewEmpty.style.display = 'grid';
+                eventLog.innerHTML = '';
+                eventLog.appendChild(eventLogEmpty);
+                eventLogEmpty.style.display = 'grid';
+            }
+
+            function closePreviewModal() {
+                previewModal.classList.remove('is-open');
+                previewModal.setAttribute('aria-hidden', 'true');
+            }
+
+            function openPreviewModal(frame = activePreviewFrame) {
+                if (!frame) {
+                    return;
+                }
+
+                previewModalImage.src = frame.frame_path;
+                previewModalImage.alt = `第 ${frame.second} 秒影格放大檢視`;
+                previewModalCaption.textContent = `第 ${frame.second} 秒影格放大檢視`;
+                previewModal.classList.add('is-open');
+                previewModal.setAttribute('aria-hidden', 'false');
+            }
+
+            function buildPreview(frame) {
+                const confidenceLabel = frame.confidence == null ? 'N/A' : `${frame.confidence}/10`;
+                activePreviewFrame = frame;
+                previewStage.innerHTML = `
+                    <img src="${frame.frame_path}" alt="Frame ${frame.second}">
+                    <div class="preview-overlay">
+                        <div class="preview-topline">
+                            <div class="preview-second">第 ${frame.second} 秒影格</div>
+                            <div class="event-badge${frame.is_match ? ' match' : ''}">${frame.is_match ? '命中目標' : '未命中'}</div>
+                        </div>
+                        <p class="preview-description">${frame.description || '這張影格沒有可用描述。'}</p>
+                        <div class="preview-metrics">
+                            <span class="preview-metric">答案信心：${confidenceLabel}</span>
+                            <span class="preview-metric">狀態：${frame.is_match ? 'Match Yes' : 'Match No'}</span>
+                        </div>
+                    </div>
+                `;
+                previewStage.classList.add('is-clickable');
+            }
+
+            function renderEventLog() {
+                eventLog.innerHTML = '';
+
+                if (!frameEvents.length) {
+                    eventLog.appendChild(eventLogEmpty);
+                    eventLogEmpty.style.display = 'grid';
+                    return;
+                }
+
+                frameEvents.forEach((frame, index) => {
+                    const confidenceLabel = frame.confidence == null ? 'N/A' : `${frame.confidence}/10`;
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = `event-item${index === activeFrameIndex ? ' active' : ''}`;
+                    button.innerHTML = `
+                        <div class="event-item-head">
+                            <div class="event-item-time">第 ${frame.second} 秒</div>
+                            <div class="event-badge${frame.is_match ? ' match' : ''}">${frame.is_match ? '命中' : '未命中'}</div>
+                        </div>
+                        <p class="event-description">${frame.description || '這張影格沒有可用描述。'}</p>
+                        <div class="event-meta">
+                            <span>答案信心：${confidenceLabel}</span>
+                            <span>點擊可切換大圖預覽</span>
+                        </div>
+                    `;
+                    button.addEventListener('click', () => {
+                        activeFrameIndex = index;
+                        buildPreview(frameEvents[activeFrameIndex]);
+                        renderEventLog();
+                    });
+                    eventLog.appendChild(button);
+                });
+            }
+
+            function recordFrame(frame) {
+                const MAX_EVENT_ITEMS = 18;
+                frameEvents.unshift(frame);
+                if (frameEvents.length > MAX_EVENT_ITEMS) {
+                    frameEvents = frameEvents.slice(0, MAX_EVENT_ITEMS);
+                }
+
+                activeFrameIndex = 0;
+                buildPreview(frameEvents[0]);
+                renderEventLog();
+
+                renderedFrames += 1;
+                resultsCount.textContent = `已收到 ${renderedFrames} 張分析影格，右側僅保留最近 ${Math.min(frameEvents.length, MAX_EVENT_ITEMS)} 筆事件`;
+            }
+
+            uploadArea.addEventListener('dragover', (event) => {
+                event.preventDefault();
+                uploadArea.classList.add('is-dragover');
             });
 
-            uploadArea.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                uploadArea.style.borderColor = '#ccc';
+            uploadArea.addEventListener('dragleave', (event) => {
+                event.preventDefault();
+                uploadArea.classList.remove('is-dragover');
             });
 
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.style.borderColor = '#ccc';
-                const files = e.dataTransfer.files;
+            uploadArea.addEventListener('drop', (event) => {
+                event.preventDefault();
+                uploadArea.classList.remove('is-dragover');
+                const files = event.dataTransfer.files;
                 if (files.length) {
                     videoInput.files = files;
                     updateFileInfo(files[0]);
@@ -120,109 +1110,146 @@
                 videoInput.click();
             });
 
-            videoInput.addEventListener('change', (e) => {
-                if (e.target.files.length) {
-                    updateFileInfo(e.target.files[0]);
+            previewStage.addEventListener('click', () => {
+                openPreviewModal();
+            });
+
+            previewModalClose.addEventListener('click', () => {
+                closePreviewModal();
+            });
+
+            previewModal.addEventListener('click', (event) => {
+                if (event.target === previewModal) {
+                    closePreviewModal();
                 }
             });
 
-            function updateFileInfo(file) {
-                fileInfo.textContent = `Selected file: ${file.name}`;
-            }
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    closePreviewModal();
+                }
+            });
 
-            function showError(message) {
-                errorAlert.textContent = message;
-                errorAlert.classList.remove('d-none');
-            }
+            videoInput.addEventListener('change', (event) => {
+                if (event.target.files.length) {
+                    updateFileInfo(event.target.files[0]);
+                }
+            });
 
-            function setAnalyzingState(isAnalyzing, message = 'Analyzing video...') {
-                statusText.classList.toggle('d-none', !isAnalyzing);
-                statusText.innerHTML = isAnalyzing
-                    ? `<p class="analyzing">${message}</p>`
-                    : '';
-                analyzeBtn.disabled = isAnalyzing;
-            }
+            objectInput.addEventListener('input', updateTargetPreview);
 
-            function displayFrame(frame) {
-                const confidenceLabel = frame.confidence == null ? 'N/A' : `${frame.confidence}/10`;
-                const frameCard = document.createElement('div');
-                frameCard.className = 'card mb-3';
-                frameCard.innerHTML = `
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Frame at ${frame.second} seconds</h5>
-                    </div>
-                    <div class="card-body">
-                        <img src="${frame.frame_path}" alt="Frame ${frame.second}" class="frame-image">
-                        <p class="card-text">${frame.description || 'No description available'}</p>
-                        <p class="card-text">
-                            <small class="text-muted">Confidence: ${confidenceLabel}</small>
-                            <small class="text-muted mx-2">|</small>
-                            <small class="text-muted float-end">Match: ${frame.is_match ? 'Yes' : 'No'}</small>
-                        </p>
-                    </div>
-                `;
-                resultsContainer.insertBefore(frameCard, resultsContainer.firstChild);
-            }
-
-            uploadForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
+            uploadForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
 
                 const video = videoInput.files[0];
-                const objectStr = document.getElementById('objectInput').value;
+                const objectStr = objectInput.value.trim();
 
                 if (!video || !objectStr) {
-                    showError('Please provide both video file and object description');
+                    showError('請同時提供影片檔案與目標描述。');
                     return;
                 }
 
+                clearError();
+                updateTargetPreview();
+                resetRunState();
+                analyzeBtn.disabled = true;
+
+                setStatus(
+                    'running',
+                    '正在逐幀檢查影像',
+                    '模型已啟動，會逐秒讀取畫面並即時回報命中結果。',
+                    '分析中...\n等待第一筆影格回傳。'
+                );
+
+                const formData = new FormData();
+                formData.append('video', video);
+                formData.append('object_str', objectStr);
+
                 try {
-                    errorAlert.classList.add('d-none');
-                    setAnalyzingState(true);
-                    resultsContainer.innerHTML = '';
-
-                    const formData = new FormData();
-                    formData.append('video', video);
-                    formData.append('object_str', objectStr);
-
                     const response = await fetch('/analyze', {
                         method: 'POST',
                         body: formData
                     });
+
+                    if (!response.ok || !response.body) {
+                        throw new Error('伺服器沒有回傳可讀取的分析串流。');
+                    }
 
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
                     let buffer = '';
 
                     while (true) {
-                        const {value, done} = await reader.read();
+                        const { value, done } = await reader.read();
                         if (done) {
                             break;
                         }
 
-                        buffer += decoder.decode(value, {stream: true});
-                        const results = buffer.split('\n');
-                        buffer = results.pop() || '';
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
 
-                        for (const result of results) {
+                        for (const line of lines) {
+                            if (!line.trim()) {
+                                continue;
+                            }
+
                             try {
-                                const data = JSON.parse(result);
+                                const data = JSON.parse(line);
+
                                 if (data.status === 'success' && data.frame) {
-                                    displayFrame(data.frame);
+                                    recordFrame(data.frame);
+                                    framesAnalyzed.textContent = String(renderedFrames);
+
+                                    if (data.frame.is_match) {
+                                        matchSecond.textContent = `第 ${data.frame.second} 秒`;
+                                        setStatus(
+                                            'match',
+                                            '已命中目標，停止繼續搜索',
+                                            '系統已找到符合描述的畫面，後端會停止後續分析並卸載模型。',
+                                            `命中時間：第 ${data.frame.second} 秒\n最新判讀：${data.frame.description || '無描述'}`
+                                        );
+                                    } else {
+                                        setStatus(
+                                            'running',
+                                            '持續搜索中',
+                                            '尚未找到符合條件的畫面，系統會繼續掃描下一秒影格。',
+                                            `最新分析：第 ${data.frame.second} 秒\n${data.frame.description || '無描述'}`
+                                        );
+                                    }
                                 } else if (data.status === 'complete') {
-                                    setAnalyzingState(false);
+                                    framesAnalyzed.textContent = String(data.frames_analyzed ?? renderedFrames);
+
+                                    if (data.match_found) {
+                                        matchSecond.textContent = `第 ${data.match_second} 秒`;
+                                        setStatus(
+                                            'match',
+                                            '本次搜索已完成，已找到目標',
+                                            '分析流程已收斂，模型應已開始釋放資源。',
+                                            `總分析影格：${data.frames_analyzed}\n命中時間：第 ${data.match_second} 秒`
+                                        );
+                                    } else {
+                                        setStatus(
+                                            'idle',
+                                            '本次搜索已完成，未找到目標',
+                                            '整支影片的抽幀分析已結束，可以調整描述後再試一次。',
+                                            `總分析影格：${data.frames_analyzed}\n本次未命中。`
+                                        );
+                                    }
+
                                     reader.cancel();
-                                    return;
+                                    break;
                                 }
-                            } catch (e) {
-                                console.error('Error parsing result:', e);
+                            } catch (parseError) {
+                                console.error('Error parsing stream result:', parseError);
                             }
                         }
                     }
                 } catch (error) {
-                    showError('An error occurred during analysis');
+                    showError(error.message || '分析過程發生錯誤。');
                     console.error('Error:', error);
                 } finally {
-                    setAnalyzingState(false);
+                    analyzeBtn.disabled = false;
                 }
             });
         });
