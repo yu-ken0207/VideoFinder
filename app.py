@@ -207,7 +207,7 @@ def extract_and_analyze_frames(video_path, output_folder, object_str):
 # 主程序入口
 if __name__ == "__main__":
     # 設置參數
-    video_path = "./a.mp4"
+    video_path = "uploads/Screencast from 12-08-2024 03_57_05 PM.webm"
     output_folder = "output_frames"
     object_to_find = "A man riding a bicycle"
 

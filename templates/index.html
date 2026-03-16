@@ -135,7 +135,16 @@
                 errorAlert.classList.remove('d-none');
             }
 
+            function setAnalyzingState(isAnalyzing, message = 'Analyzing video...') {
+                statusText.classList.toggle('d-none', !isAnalyzing);
+                statusText.innerHTML = isAnalyzing
+                    ? `<p class="analyzing">${message}</p>`
+                    : '';
+                analyzeBtn.disabled = isAnalyzing;
+            }
+
             function displayFrame(frame) {
+                const confidenceLabel = frame.confidence == null ? 'N/A' : `${frame.confidence}/10`;
                 const frameCard = document.createElement('div');
                 frameCard.className = 'card mb-3';
                 frameCard.innerHTML = `
@@ -146,7 +155,8 @@
                         <img src="${frame.frame_path}" alt="Frame ${frame.second}" class="frame-image">
                         <p class="card-text">${frame.description || 'No description available'}</p>
                         <p class="card-text">
-                            <small class="text-muted">Confidence: ${frame.confidence}/10</small>
+                            <small class="text-muted">Confidence: ${confidenceLabel}</small>
+                            <small class="text-muted mx-2">|</small>
                             <small class="text-muted float-end">Match: ${frame.is_match ? 'Yes' : 'No'}</small>
                         </p>
                     </div>
@@ -167,8 +177,7 @@
 
                 try {
                     errorAlert.classList.add('d-none');
-                    statusText.classList.remove('d-none');
-                    analyzeBtn.disabled = true;
+                    setAnalyzingState(true);
                     resultsContainer.innerHTML = '';
 
                     const formData = new FormData();
@@ -182,19 +191,27 @@
 
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
+                    let buffer = '';
 
                     while (true) {
                         const {value, done} = await reader.read();
-                        if (done) break;
+                        if (done) {
+                            break;
+                        }
 
-                        const text = decoder.decode(value);
-                        const results = text.split('\n').filter(line => line.trim());
+                        buffer += decoder.decode(value, {stream: true});
+                        const results = buffer.split('\n');
+                        buffer = results.pop() || '';
 
                         for (const result of results) {
                             try {
                                 const data = JSON.parse(result);
                                 if (data.status === 'success' && data.frame) {
                                     displayFrame(data.frame);
+                                } else if (data.status === 'complete') {
+                                    setAnalyzingState(false);
+                                    reader.cancel();
+                                    return;
                                 }
                             } catch (e) {
                                 console.error('Error parsing result:', e);
@@ -205,8 +222,7 @@
                     showError('An error occurred during analysis');
                     console.error('Error:', error);
                 } finally {
-                    statusText.classList.add('d-none');
-                    analyzeBtn.disabled = false;
+                    setAnalyzingState(false);
                 }
             });
         });
