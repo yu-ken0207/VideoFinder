@@ -1,5 +1,7 @@
 # VideoFinder
 
+[![Tests](https://github.com/yu-ken0207/VideoFinder/actions/workflows/test.yml/badge.svg)](https://github.com/yu-ken0207/VideoFinder/actions/workflows/test.yml) [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
 > Upload a video and describe what you are looking for (for example "a person wearing a red shirt"). VideoFinder samples one frame per second, asks a local vision model through Ollama (llama3.2-vision) whether the target appears, and streams the per-frame results to the web page. Built with FastAPI and OpenCV; the video never leaves your machine.
 
 VideoFinder 是一個用來從影片中搜尋指定物件的 Python 專案。
@@ -171,6 +173,14 @@ unset PYTHONPATH
 ```
 
 再重新啟動環境。
+
+## 測試
+
+```bash
+PYTHONPATH=. python -m unittest discover -s tests -p 'test_*.py'
+```
+
+測試把 Ollama 換成假的回答，不用真的模型：檢查回答的解析、命中門檻、逐張串流的結果。每次 push 會在 GitHub Actions 自動跑。
 
 ## 開發備註
 
