@@ -144,7 +144,7 @@ async def home(request: Request):
     """
     返回首頁的 HTML 模板。
     """
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 
 async def stream_video_analysis(video_path: Path, video_name: str, object_str: str, request: Request | None = None):
