@@ -1,5 +1,7 @@
 # VideoFinder
 
+> Upload a video and describe what you are looking for (for example "a person wearing a red shirt"). VideoFinder samples one frame per second, asks a local vision model through Ollama (llama3.2-vision) whether the target appears, and streams the per-frame results to the web page. Built with FastAPI and OpenCV; the video never leaves your machine.
+
 VideoFinder 是一個用來從影片中搜尋指定物件的 Python 專案。
 它提供一個簡單的 Web 介面，讓使用者上傳影片並輸入想找的目標描述，系統會每秒擷取一幀，交給本機 Ollama 的視覺模型分析，回傳逐幀結果。
 
