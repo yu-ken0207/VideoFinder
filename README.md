@@ -174,3 +174,7 @@ unset PYTHONPATH
 
 - 主要入口為 `main.py`
 - 若要直接執行腳本版流程，可參考 `app.py`
+
+## License
+
+Apache-2.0，見 [LICENSE](LICENSE)。
