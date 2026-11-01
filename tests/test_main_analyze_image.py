@@ -29,7 +29,7 @@ class AnalyzeImageParsingTests(unittest.TestCase):
                 main.analyze_image("fake-frame.jpg", "The person in the orange clothes")
             )
 
-        self.assertTrue(is_match)  # 信心 7 分以上才算找到，8 分算
+        self.assertFalse(is_match)  # 信心要 9 分以上才算找到，8 分不算
         self.assertEqual(
             description,
             "The person in orange clothes is near the center.",

@@ -75,7 +75,7 @@ def parse_analysis_response(response_text: str):
             except ValueError:
                 confidence = None
 
-    is_match = answer == "YES" and (confidence is None or confidence >= 7)
+    is_match = answer == "YES" and (confidence is None or confidence >= 9)
     return is_match, description, confidence
 
 
