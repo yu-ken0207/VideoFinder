@@ -4,16 +4,15 @@
 
 [![Tests](https://github.com/yu-ken0207/VideoFinder/actions/workflows/test.yml/badge.svg)](https://github.com/yu-ken0207/VideoFinder/actions/workflows/test.yml) [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-VideoFinder 是一個用來從影片中搜尋指定物件的 Python 專案。
-它提供一個簡單的 Web 介面，讓使用者上傳影片並輸入想找的目標描述，系統會每秒擷取一幀，交給本機 Ollama 的視覺模型分析，回傳逐幀結果。
+上傳影片、描述要找的東西（例如「穿紅衣服的人」），VideoFinder 會每秒擷取一張畫面，交給本機 Ollama 的視覺模型（llama3.2-vision）判斷有沒有出現，結果即時顯示在網頁上。用 FastAPI 和 OpenCV 寫，影片不會離開你的電腦。
 
 ## 功能
 
 - 上傳影片並輸入要搜尋的目標描述
 - 以 FastAPI 提供 Web 服務
-- 使用 OpenCV 每秒擷取一張影格
+- 使用 OpenCV 每秒擷取一張畫面
 - 使用 Ollama `llama3.2-vision` 分析圖片內容
-- 即時串流回傳逐幀分析結果
+- 即時串流回傳每張畫面的分析結果
 
 ## 技術組成
 
@@ -38,10 +37,10 @@ VideoFinder/
 
 說明：
 
-- `main.py`: 主要 Web 應用入口
-- `app.py`: 較早期的本地腳本版本，用來直接分析單支影片
-- `templates/index.html`: 前端頁面
-- `uploads/`: 上傳影片暫存目錄
+- `main.py`：主要 Web 應用入口
+- `app.py`：較早期的本地腳本版本，用來直接分析單支影片
+- `templates/index.html`：前端頁面
+- `uploads/`：上傳影片暫存目錄
 
 ## 環境需求
 
@@ -49,7 +48,7 @@ VideoFinder/
 
 1. 已安裝 Conda
 2. 已建立名為 `VideoFinder` 的 conda 環境
-3. 已安裝本專案 Python 依賴
+3. 已安裝本專案需要的 Python 套件
 4. 本機 Ollama 服務已啟動
 5. 已下載模型 `llama3.2-vision`
 
@@ -72,13 +71,11 @@ conda activate VideoFinder
 
 ## 安裝 Ollama 模型
 
-請先啟動 Ollama，並拉取視覺模型：
+請先啟動 Ollama，並下載視覺模型：
 
 ```bash
 ollama pull llama3.2-vision
 ```
-
-若 Ollama 尚未啟動，請先確認本機服務正常運行。
 
 ## 啟動專案
 
@@ -102,7 +99,7 @@ http://127.0.0.1:8000
 2. 上傳影片檔
 3. 輸入想搜尋的目標描述
 4. 點擊 `Start Analysis`
-5. 系統會顯示每秒擷取的一張影格與分析結果
+5. 系統會顯示每秒擷取的一張畫面與分析結果
 
 例如可輸入：
 
@@ -122,20 +119,20 @@ http://127.0.0.1:8000
 
 表單欄位：
 
-- `video`: 影片檔案
-- `object_str`: 要搜尋的目標描述
+- `video`：影片檔案
+- `object_str`：要搜尋的目標描述
 
 回應方式：
 
-- 使用串流 JSON 回傳逐幀分析結果
+- 使用串流 JSON 回傳每張畫面的分析結果
 
 ## 分析流程
 
 1. 接收上傳影片
 2. 將影片存到 `uploads/`
-3. 使用 OpenCV 每秒取一幀
-4. 對影格做基礎影像前處理
-5. 呼叫 Ollama 模型分析該影格
+3. 使用 OpenCV 每秒擷取一張畫面
+4. 對畫面做基礎影像前處理
+5. 呼叫 Ollama 模型分析這張畫面
 6. 將分析結果以串流方式回傳到前端
 
 模型回答 YES 且信心 9 分以上（模型沒給分數也算）才算找到；找到第一張就停止，分析完會把模型從記憶體卸載。
@@ -143,7 +140,7 @@ http://127.0.0.1:8000
 ## 注意事項
 
 - 分析速度取決於影片長度、硬體效能與 Ollama 模型速度
-- 本專案目前每秒只分析一張影格
+- 本專案目前每秒只分析一張畫面
 - 若 `llama3.2-vision` 未安裝或 Ollama 未啟動，分析會失敗
 - `main.py` 內使用本機資料夾 `uploads/` 與 `frames/` 儲存中間檔
 
@@ -168,13 +165,13 @@ conda activate VideoFinder
 
 ### 3. Python import 行為異常
 
-如果你的 shell 有額外注入 `PYTHONPATH`，可能會混入其他系統套件。必要時可先執行：
+如果你的 shell 另外設定了 `PYTHONPATH`，可能會載入到其他地方的套件。必要時可先執行：
 
 ```bash
 unset PYTHONPATH
 ```
 
-再重新啟動環境。
+再重新啟用環境。
 
 ## 測試
 
@@ -182,12 +179,7 @@ unset PYTHONPATH
 PYTHONPATH=. python -m unittest discover -s tests -p 'test_*.py'
 ```
 
-測試把 Ollama 換成假的回答，不用真的模型：檢查回答的解析、命中門檻、逐張串流的結果。每次 push 會在 GitHub Actions 自動跑。
-
-## 開發備註
-
-- 主要入口為 `main.py`
-- 若要直接執行腳本版流程，可參考 `app.py`
+測試用假的 Ollama 回答，不需要真的模型，檢查回答怎麼解析、信心分數門檻，以及每張畫面的結果有沒有一張一張串流回傳。每次 push 會在 GitHub Actions 自動跑。
 
 ## License
 
